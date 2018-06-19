@@ -7,23 +7,50 @@ class ManualScraper(object):
     Given a path to the HTML page of eloratings.net/XXXX_result,
     parses and returns a Pandas DataFrame of match data. """
     FIELDS = [
-        "HomeTeam",
-        "AwayTeam",
-        "Date",
-        "Location",
-        "MatchType",
-        "HomeAdvantage",
-        "HomeTeamScore",
-        "AwayTeamScore",
-        "HomeTeamResultingRating",
-        "AwayTeamResultingRating",
-        "HomeTeamRatingChange",
-        "AwayTeamRatingChange",
-        "HomeTeamRank",
-        "AwayTeamRank",
-        "HomeTeamRankChange",
-        "AwayTeamRankChange"
+        "home_team",
+        "away_team",
+        "date",
+        "location",
+        "match_type",
+        "home_advantage",
+        "home_team_score",
+        "away_team_score",
+        "home_team_resulting_rating",
+        "away_team_resulting_rating",
+        "home_team_rating_change",
+        "away_team_rating_change",
+        "home_team_resulting_rank",
+        "away_team_resulting_rank",
+        "home_team_rank_change",
+        "away_team_rank_change"
     ]
+
+    MONTH_NAME_TO_NUMBER = {
+        'JANUARY': 1,
+        'FEBRUARY': 2,
+        'MARCH': 3,
+        'APRIL': 4,
+        'MAY': 5,
+        'JUNE': 6,
+        'JULY': 7,
+        'AUGUST': 8,
+        'SEPTEMBER': 9,
+        'OCTOBER': 10,
+        'NOVEMBER': 11,
+        'DECEMBER': 12,
+
+        'JAN': 1,
+        'FEB': 2,
+        'MAR': 3,
+        'APR': 4,
+        'JUN': 6,
+        'JUL': 7,
+        'AUG': 8,
+        'SEP': 9,
+        'OCT': 10,
+        'NOV': 11,
+        'DEC': 12
+    }
 
     def __init__(self):
         self.num_fields = len(self.FIELDS)
@@ -77,9 +104,13 @@ class ManualScraper(object):
         """
         result = []
         for match in matches:
-            result.append(
-                self.process_single_match_div(match)
-            )
+            try:
+                result.append(
+                    self.process_single_match_div(match)
+                )
+            except AttributeError:
+                print("ParseError for {0}".format(match))
+
         return result
 
     def process_single_match_div(self, match):
@@ -100,17 +131,26 @@ class ManualScraper(object):
         a_tag_extractor = lambda contents, index: contents[index].text
         a_tag_extractor_first = lambda contents: a_tag_extractor(contents, 0)
         a_tag_extractor_second = lambda contents: a_tag_extractor(contents, 2)
-        string_tag_extractor = lambda contents, index: contents[index]
+        string_tag_extractor = lambda contents, index: str(contents[index])
         string_tag_extractor_first = lambda contents: string_tag_extractor(contents, 0)
         string_tag_extractor_second = lambda contents: string_tag_extractor(contents, 2)
 
         def date_extractor(contents):
             """An extractor function for the date div."""
             # e.g. ['January 4', <br/>, '2017']
-            month_day = contents[0]
+            month_day = contents[0].split(' ')
+            month = str(self.MONTH_NAME_TO_NUMBER[month_day[0].upper()])
+            day = month_day[1]
             year = contents[2]
             # e.g. '2017-01-04'
-            return '-'.join([year] + month_day.split(' '))
+            return '-'.join([year, month, day])
+
+        def match_type_extractor(contents):
+            """A match type is sometimes an a tag and sometimes a string."""
+            try_as_string = string_tag_extractor_first(contents)
+            if len(try_as_string) > 30:
+                return a_tag_extractor_first(contents)
+            return try_as_string
 
         def custom_int(negative_integer):
             """A custom function that processes numerical data."""
@@ -130,7 +170,7 @@ class ManualScraper(object):
             extract_info(1, a_tag_extractor_second),
             extract_info(0, date_extractor),
             extract_info(3, a_tag_extractor_second),
-            extract_info(3, string_tag_extractor_first),
+            extract_info(3, match_type_extractor),
             False,
             extract_info(2, string_tag_extractor_first),
             extract_info(2, string_tag_extractor_second),
@@ -159,3 +199,18 @@ class ManualScraper(object):
             result[5] = True
 
         return result
+
+
+class ManualScraperAdapter(object):
+
+    FILE_PATH_SUFFIX = "./data/{0}_result.htm"
+
+    def __init__(self, year):
+        self.scraper = ManualScraper()
+        self.year = year
+
+    def get_match_data(self):
+
+        file_path = self.FILE_PATH_SUFFIX.format(self.year)
+
+        return self.scraper.get_raw_matches(file_path)
