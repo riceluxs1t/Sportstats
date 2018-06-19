@@ -202,7 +202,8 @@ class ManualScraper(object):
 
 
 class ManualScraperAdapter(object):
-
+    """An adapter so that the model side does not have to know
+    the particular scraper specific details. """
     FILE_PATH_SUFFIX = "./data/{0}_result.htm"
 
     def __init__(self, year):
