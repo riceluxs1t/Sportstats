@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup
+import pandas as pd
 
 
 class ManualScraper(object):
     """
     Given a path to the HTML page of eloratings.net/XXXX_result,
-    parses and returns a list of match data which is a list of
-    the following fields in the listed order.
-
-    TODO: return a Pandas frame.
-    """
+    parses and returns a Pandas DataFrame of match data. """
     FIELDS = [
         "HomeTeam",
         "AwayTeam",
@@ -41,7 +38,7 @@ class ManualScraper(object):
         html_tree = self.get_html_tree(html_page)
         all_match_divs = self.get_all_match_divs(html_tree)
         matches = self.process_match_divs(all_match_divs)
-        return matches
+        return pd.DataFrame(matches, columns=self.FIELDS)
 
     def get_html_page(self, file_path):
         """
