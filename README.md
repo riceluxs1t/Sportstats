@@ -22,3 +22,9 @@ http://worldcup.sfg.io/
 ## Deployment
 
 https://obscure-savannah-41248.herokuapp.com/
+
+## Loaing Match Data into DB
+
+python manage.py load_manual [year1] [year2] [year3] ... [yearN]
+
+e.g. python manage.py load_manual 2018 2017
