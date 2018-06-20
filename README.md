@@ -3,8 +3,10 @@
 ## Setup
 
 1. Install Python 3.5+
-2. Install python virtualenvwrapper
-3. run "pip install -r requirements.txt"
+2. run "pip install pipenv"
+3. run "pipenv install".
+(if you are not familiar with pipenv, 
+more on information https://robots.thoughtbot.com/how-to-manage-your-python-projects-with-pipenv)
 
 
 ## Reference Paper
