@@ -5,6 +5,7 @@ from numpy.random import poisson
 from collections import defaultdict
 
 
+# TODO(nate): refactor this guy the hell out of it.
 class IndependentPoissonModel(object):
     """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
