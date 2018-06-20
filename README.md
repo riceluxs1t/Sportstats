@@ -38,3 +38,5 @@ https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=[home_team_na
 e.g.
 
 https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=Iran&away_team=Spain
+
+Highly recommend you get a Chrome JSON Formatter for human friendly rendering (https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=ko) 
