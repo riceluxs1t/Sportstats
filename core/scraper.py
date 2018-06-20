@@ -15,14 +15,14 @@ class ManualScraper(object):
         "home_advantage",
         "home_team_score",
         "away_team_score",
-        "home_team_resulting_rating",
-        "away_team_resulting_rating",
         "home_team_rating_change",
         "away_team_rating_change",
-        "home_team_resulting_rank",
-        "away_team_resulting_rank",
+        "home_team_resulting_rating",
+        "away_team_resulting_rating",
         "home_team_rank_change",
-        "away_team_rank_change"
+        "away_team_rank_change",
+        "home_team_resulting_rank",
+        "away_team_resulting_rank"
     ]
 
     MONTH_NAME_TO_NUMBER = {

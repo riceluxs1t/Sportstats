@@ -1,7 +1,7 @@
 from core.models import RawMatch
 
 
-BATCH_SIZE = 1
+BATCH_SIZE = 1000
 
 
 def load_raw_match_data(raw_matches_df):
@@ -16,6 +16,9 @@ def load_raw_match_data(raw_matches_df):
 
         match_part = match[1]
 
+        # TODO(nate): hidden dependecy exists. Logic assumes that
+        # the Django model fields are identical to Pandas df columns.
+        # Either one may change. Ensure this in the adapter instead?
         batch.append(
             RawMatch(
                 **match_part.to_dict()
