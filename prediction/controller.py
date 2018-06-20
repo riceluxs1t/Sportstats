@@ -1,5 +1,4 @@
-from prediction.random_model import RandomModel
-
+from prediction.independent_poisson import IndependentPoissonModel
 
 def get_current_model():
-    return RandomModel()
+    return IndependentPoissonModel()
