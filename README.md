@@ -28,3 +28,11 @@ https://obscure-savannah-41248.herokuapp.com/
 python manage.py load_manual [year1] [year2] [year3] ... [yearN]
 
 e.g. python manage.py load_manual 2018 2017
+
+## Make Prediction
+
+https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=[home_team_name]&away_team=[away_team_name]
+
+e.g.
+
+https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=Iran&away_team=Spain
