@@ -3,8 +3,10 @@
 ## Setup
 
 1. Install Python 3.5+
-2. Install python virtualenvwrapper
-3. run "pip install -r requirements.txt"
+2. run "pip install pipenv"
+3. run "pipenv install".
+(if you are not familiar with pipenv, 
+more on information https://robots.thoughtbot.com/how-to-manage-your-python-projects-with-pipenv)
 
 
 ## Reference Paper
@@ -25,7 +27,7 @@ https://obscure-savannah-41248.herokuapp.com/
 
 ## Loaing Match Data into DB
 
-python manage.py load_manual [year1] [year2] [year3] ... [yearN]
+python manage.py load_data [year1] [year2] [year3] ... [yearN]
 
 e.g. python manage.py load_manual 2018 2017
 
@@ -36,3 +38,5 @@ https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=[home_team_na
 e.g.
 
 https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=Iran&away_team=Spain
+
+Highly recommend you get a Chrome JSON Formatter for human friendly rendering (https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=ko) 
