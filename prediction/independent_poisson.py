@@ -52,6 +52,8 @@ class IndependentPoissonModel(object):
         print("{3} Win: {0}%, Draw: {1}%, {4} Win: {2}%".format(
             win * 100, draw * 100, lose * 100, home_team, away_team))
 
+        return score_dict
+
     def sample(self, l_A, l_B, num_iters=10000):
 
         home_team_score_simulations = poisson(l_A, num_iters)
