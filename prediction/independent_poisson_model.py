@@ -1,5 +1,6 @@
 from collections import defaultdict
-from numpy.random import poisson
+from functools import reduce
+from numpy.random import poisson as numpy_poisson_distribution
 import statsmodels.api as sm
 from prediction.prediction_output import ConcretePredictionOutput
 from prediction.utils import get_current_elo, filter_matches
@@ -16,25 +17,25 @@ class IndependentPoissonModel(object):
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
 
-        uA_B = self.fit_poisson(
+        uA_B = self.fit_poisson_using_goals(
             filter_matches(home_team),
             home_team,
             True
         ).predict([away_team_elo, 1])
 
-        uB_A = self.fit_poisson(
+        uB_A = self.fit_poisson_using_goals(
             filter_matches(away_team),
             away_team,
             True
         ).predict([home_team_elo, 1])
 
-        vA_B = self.fit_poisson(
+        vA_B = self.fit_poisson_using_goals(
             filter_matches(home_team),
             home_team,
             False
         ).predict([away_team_elo, 1])
 
-        vB_A = self.fit_poisson(
+        vB_A = self.fit_poisson_using_goals(
             filter_matches(away_team),
             away_team,
             False
@@ -47,7 +48,9 @@ class IndependentPoissonModel(object):
 
         return score_dict
 
-    def fit_poisson(self, matches, team_name, scored):
+    def fit_poisson_using_goals(self, matches, team_name, scored):
+        """fits and returns a poisson distribution using goals scored or
+        allowed depending on 'scored' param. Uses the statsmodel library."""
         elos = []
         num_goals = []
 
@@ -84,23 +87,23 @@ class IndependentPoissonModel(object):
 
     def run_simulations(
         self,
-        poisson_param_team_A,
-        poisson_param_team_B,
+        poisson_param_home_team,
+        poisson_param_away_team,
         num_iters
     ):
+        def reduce_func(current_dict, pair):
+            home_team_score, away_team_score = pair
+            current_dict[(home_team_score, away_team_score)] += 1
+            return current_dict
 
-        home_team_score_simulations = poisson(poisson_param_team_A, num_iters)
-        away_team_score_simulations = poisson(poisson_param_team_B, num_iters)
+        home_team_score_simulations = numpy_poisson_distribution(poisson_param_home_team, num_iters)
+        away_team_score_simulations = numpy_poisson_distribution(poisson_param_away_team, num_iters)
 
-        score_dict = defaultdict(int)
-
-        for i in range(num_iters):
-            score_dict[
-                (
-                    home_team_score_simulations[i],
-                    away_team_score_simulations[i]
-                )
-            ] += 1
+        score_dict = reduce(
+            reduce_func,
+            zip(home_team_score_simulations, away_team_score_simulations),
+            defaultdict(int)
+        )
 
         for key in score_dict:
             score_dict[key] /= num_iters
@@ -109,4 +112,5 @@ class IndependentPoissonModel(object):
 
 
 def make_prediction_output(model_outcome):
+    """A constructor for a PredictionOutput of the Independent Poisson model. """
     return ConcretePredictionOutput(model_outcome)

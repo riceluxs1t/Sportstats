@@ -1,5 +1,5 @@
 class PredictionOutput(object):
-
+    """An abstract data that represents the prediction output of some model."""
     def get_outcome_prob(self, outcome):
         pass
 
@@ -7,7 +7,7 @@ class PredictionOutput(object):
         pass
 
 
-class ConcretePredictionOutput(object):
+class ConcretePredictionOutput(PredictionOutput):
 
     def __init__(self, score_dict):
         self.score_dict = score_dict

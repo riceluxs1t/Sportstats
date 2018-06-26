@@ -1,12 +1,12 @@
-from prediction import independent_poisson
+from prediction import independent_poisson_model
 
 
 def get_current_model():
-    return independent_poisson.IndependentPoissonModel()
+    return independent_poisson_model.IndependentPoissonModel()
 
 
 def make_prediction_output_currnet_model(model_outcome):
-    return independent_poisson.make_prediction_output(model_outcome)
+    return independent_poisson_model.make_prediction_output(model_outcome)
 
 
 def predict(home_team, away_team):
