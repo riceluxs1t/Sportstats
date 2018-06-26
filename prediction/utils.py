@@ -40,7 +40,7 @@ def get_current_elo(team_name):
 
 def filter_matches(team_name, home_advantage=False):
     return RawMatch.objects.filter(
-        Q(home_team=team_name) | Q(away_team=team_name)
+        Q(home_team=team_name.lower()) | Q(away_team=team_name.lower())
     ).filter(
         home_advantage=home_advantage
     )
