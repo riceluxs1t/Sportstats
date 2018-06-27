@@ -1,11 +1,6 @@
-from django.shortcuts import render
 from prediction import controller, utils
 import json
 from django.http import HttpResponse
-
-
-def index(request):
-    return render(request, 'index.htm')
 
 
 def predict(request):

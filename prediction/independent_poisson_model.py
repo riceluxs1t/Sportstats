@@ -14,6 +14,9 @@ class IndependentPoissonModel(object):
     """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
 
+        home_team = home_team.lower()
+        away_team = away_team.lower()
+
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
 
