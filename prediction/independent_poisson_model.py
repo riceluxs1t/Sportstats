@@ -3,15 +3,14 @@ from functools import reduce
 from numpy.random import poisson as numpy_poisson_distribution
 import statsmodels.api as sm
 from prediction.prediction_output import ConcretePredictionOutput
-from prediction.utils import get_current_elo, filter_matches, average_goal
+from prediction.utils import get_current_elo, filter_matches
 
 
-class BivariatePoissonModel(object):
+class IndependentPoissonModel(object):
 
     OPTIMIZATION_METHOD = 'newton'
     NUM_ITERS = 10000
-    # average goals of Home team entire game = 2.0498977505112475
-    t = 2.0498977505112475
+
     """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
 
@@ -21,36 +20,35 @@ class BivariatePoissonModel(object):
         uA_B = self.fit_poisson_using_goals(
             filter_matches(home_team),
             home_team,
-            True,False,
+            True
         ).predict([away_team_elo, 1])
 
         uB_A = self.fit_poisson_using_goals(
             filter_matches(away_team),
             away_team,
-            True, False
+            True
         ).predict([home_team_elo, 1])
 
         vA_B = self.fit_poisson_using_goals(
             filter_matches(home_team),
             home_team,
-            False,False
+            False
         ).predict([away_team_elo, 1])
 
         vB_A = self.fit_poisson_using_goals(
             filter_matches(away_team),
             away_team,
-            False,False
+            False
         ).predict([home_team_elo, 1])
 
-        l_1 = (uA_B + vB_A) / 2.0
-        l_2 = (uB_A + vA_B) / 2.0
-        # # tA_B = tB_A, so  
-        # l_0 = self.t
-        score_dict = self.run_simulations(l_1, l_2, self.NUM_ITERS)
+        l_A = (uA_B + vB_A) / 2.0
+        l_B = (uB_A + vA_B) / 2.0
+
+        score_dict = self.run_simulations(l_A, l_B, self.NUM_ITERS)
 
         return score_dict
-     
-    def fit_poisson_using_goals(self, matches, team_name,scored,tau):
+
+    def fit_poisson_using_goals(self, matches, team_name, scored):
         """fits and returns a poisson distribution using goals scored or
         allowed depending on 'scored' param. Uses the statsmodel library."""
         elos = []
@@ -83,7 +81,7 @@ class BivariatePoissonModel(object):
                     num_goals.append(match.home_team_score)
 
         poisson = sm.Poisson(num_goals, elos)
-        poisson_fitted = poisson.fit(start = [self.t for i in range(len(elos))],method=self.OPTIMIZATION_METHOD)
+        poisson_fitted = poisson.fit(method=self.OPTIMIZATION_METHOD)
 
         return poisson_fitted
 

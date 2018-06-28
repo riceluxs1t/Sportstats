@@ -166,14 +166,14 @@ class ManualScraper(object):
 
         # process non numerical data
         result = [
-            extract_info(1, a_tag_extractor_first),
-            extract_info(1, a_tag_extractor_second),
-            extract_info(0, date_extractor),
-            extract_info(3, a_tag_extractor_second),
-            extract_info(3, match_type_extractor),
+            extract_info(1, a_tag_extractor_first).lower(),
+            extract_info(1, a_tag_extractor_second).lower(),
+            extract_info(0, date_extractor).lower(),
+            extract_info(3, a_tag_extractor_second).lower(),
+            extract_info(3, match_type_extractor).lower(),
             False,
-            extract_info(2, string_tag_extractor_first),
-            extract_info(2, string_tag_extractor_second),
+            extract_info(2, string_tag_extractor_first).lower(),
+            extract_info(2, string_tag_extractor_second).lower(),
         ]
 
         # process numerical data

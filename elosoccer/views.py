@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from prediction import controller
+from prediction import controller, utils
 import json
 from django.http import HttpResponse
 
@@ -13,14 +13,17 @@ def predict(request):
     home_team = request.GET['home_team']
     away_team = request.GET['away_team']
 
-    current_model = controller.get_current_model()
-
-    score_dict = current_model.predict(home_team, away_team)
-    win, draw, lose = current_model.compute_win_draw_lose(score_dict)
+    prediction_outcome = controller.predict(home_team, away_team)
+    win, draw, lose = utils.compute_win_draw_lose(prediction_outcome)
 
     score_dict_string_key = {}
-    for key in score_dict:
-        score_dict_string_key["{0}:{1}".format(key[0], key[1])] = "{0}%".format((score_dict[key] * 10000) / 100)
+    for match_outcome, prob in prediction_outcome.get_nonzero_prob_outcomes_list():
+
+        home_team_score = match_outcome[0]
+        away_team_score = match_outcome[1]
+
+        score_dict_string_key["{0}:{1}".format(home_team_score, away_team_score)] = \
+            "{0}%".format((prob * 10000) / 100)
 
     response = {
         'win': "{0}%".format(int(win*10000) / 100),
