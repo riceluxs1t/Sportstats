@@ -81,12 +81,15 @@ export default class Game extends React.Component {
                         <br />
                         {makeTag(this.props.match)}
                         <p>{home_team.goals} - {away_team.goals}</p>
+                        <p>Win   Draw   Win</p>
+                        <p>50% 25% 50%</p>
                         <p></p>
                         {
                             this.props.match.home_team_statistics != null
                                 ? <Button onClick={this.handleModal.bind(this)}>Details</Button>
                                 : <Button disabled>Details coming soon</Button>
                         }
+
                     </div>
                 }
             >

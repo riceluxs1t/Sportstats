@@ -77,12 +77,24 @@ class App extends React.Component {
     )
   }
 
-  renderGames() {
+  renderGames(t) {
     const { today } = this.state
-    if (today.length > 0) {
+    const { tmr } = this.state
+    if (today.length > 0 && t == 1) {
       return (
         <Fragment >
           {today.map((match, i) => (
+            <Col key={i} span={6}>
+              <Game match={match} modal={this.openModal.bind(this)}/>
+            </Col>
+          ))}
+        </Fragment>
+      )
+    }
+    if (tmr.length > 0 && t == 0) {
+      return (
+        <Fragment >
+          {tmr.map((match, i) => (
             <Col key={i} span={6}>
               <Game match={match} modal={this.openModal.bind(this)}/>
             </Col>
@@ -132,11 +144,11 @@ class App extends React.Component {
             <h1 style={{ margin: 0 }}>World Cup 2018 Live</h1>
           </div>
           <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
-            {this.renderGames()}
+            {this.renderGames(1)}
           </Row>
-          <div style={groupTable}>
-            {this.renderGroupTable()}
-          </div>
+          <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
+            {this.renderGames(0)}
+          </Row>
           <div style={{width: 300}}>
           </div>
         </div>
@@ -146,7 +158,7 @@ class App extends React.Component {
 }
 
 const mainContent = {
-  width: "calc(100% - 300px)",
+  width: "calc(100% - 10px)",
   height: "100vh",
   display: "grid"
 }
