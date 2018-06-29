@@ -23,7 +23,7 @@ http://worldcup.sfg.io/
 
 ## Deployment
 
-https://obscure-savannah-41248.herokuapp.com/
+http://ec2-13-125-192-62.ap-northeast-2.compute.amazonaws.com/
 
 ## Loaing Match Data into DB
 
@@ -33,11 +33,11 @@ e.g. python manage.py load_manual 2018 2017
 
 ## Make Prediction
 
-https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=[home_team_name]&away_team=[away_team_name]
+http://ec2-13-125-192-62.ap-northeast-2.compute.amazonaws.com/prediction/?home_team=[home_team]&away_team=[away_team]
 
 e.g.
 
-https://obscure-savannah-41248.herokuapp.com/prediction/?home_team=Iran&away_team=Spain
+http://ec2-13-125-192-62.ap-northeast-2.compute.amazonaws.com/prediction/?home_team=Japan&away_team=Belgium
 
 Highly recommend you get a Chrome JSON Formatter for human friendly rendering (https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=ko) 
 

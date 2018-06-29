@@ -5,3 +5,5 @@ staticfiles
 *.sqlite3
 .idea/*
 assets/*
+professional*
+webpack-stats*
