@@ -8,6 +8,8 @@ import {
   Row,
   Table,
   Col,
+  Avatar,
+  Icon,
   Modal
 } from 'antd'
 import Spin from './components/Spin'
@@ -116,7 +118,7 @@ class App extends React.Component {
         </Fragment>
       )
     }
-    return (<Spin />)
+    return <br/>
   }
 
   openModal(title, content) {
@@ -158,13 +160,14 @@ class App extends React.Component {
             <div id="header" style={{ textAlign: 'center', padding: 10 }}>
                 <h1 style={{ margin: 0 }}>World Cup 2018 Live</h1>
               </div>
-              <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
+              <Row gutter={16}>
+              <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
                 {this.renderGames(1)}
-              </Row>
-              <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
+              </Col>
+              <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
                 {this.renderGames(0)}
+              </Col>
               </Row>
-
               <div style={{width: 300}}>
               </div>
             </div>
