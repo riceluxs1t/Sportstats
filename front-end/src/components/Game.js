@@ -2,6 +2,9 @@ import React, { Fragment } from 'react'
 import { 
     Card, 
     Tag,
+    Row,
+    Col,
+    Table,
     Button,
     Progress
 } from 'antd'
@@ -9,8 +12,28 @@ import Flag from './Flag'
 import LiveGame from './LiveGame'
 import Stats from './Stats'
 import moment from 'moment'
+import { prediction_outcomes } from './predictions_outcomes'
+import { prediction_brief } from './predictions_brief'
 
 const { Meta } = Card
+
+// const dataSource = prediction_outcomes['Uruguay-Portugal']
+
+const columns = [{
+  title: 'Match Outcome',
+  dataIndex: 'outcome',
+  key: 'outcome'
+}, {
+  title: 'Odds',
+  dataIndex: 'prob',
+  key: 'prob'
+}];
+
+
+const gridStyle = {
+  width: '33%',
+  textAlign: 'center',
+};
 
 function makeTag(match) {
     const { status, datetime } = match
@@ -70,6 +93,11 @@ export default class Game extends React.Component {
     render() {
         const { home_team, away_team, datetime, status } = this.props.match
         const time = new Date(datetime)
+
+        const prediction_key = home_team.country.concat('-').concat(away_team.country)
+        const dataSource = prediction_outcomes[prediction_key]
+        const brief = prediction_brief[prediction_key]
+
         return (
             <Card
                 hoverable
@@ -78,25 +106,31 @@ export default class Game extends React.Component {
                     <div style={{ textAlign: "center" }}>
                         <Flag country={home_team.country} width={80} />
                         <Flag country={away_team.country} width={80} />
-                        <br />
+                        <p>{`${home_team.country} vs. ${away_team.country}`}</p>
+                        <p>{`${time.getHours()}:${time.getMinutes()}${(() => { if (time.getMinutes() < 10) { return "0" } })()}`}</p>
                         {makeTag(this.props.match)}
                         <p>{home_team.goals} - {away_team.goals}</p>
-                        <p>Win   Draw   Win</p>
-                        <p>50% 25% 50%</p>
-                        <p></p>
                         {
                             this.props.match.home_team_statistics != null
                                 ? <Button onClick={this.handleModal.bind(this)}>Details</Button>
                                 : <Button disabled>Details coming soon</Button>
                         }
 
+                        <br/>
+                        <br/>
+
+                        <Card title="Prediction">
+                            <Card.Grid style={gridStyle}>Home</Card.Grid>
+                            <Card.Grid style={gridStyle}>Draw</Card.Grid>
+                            <Card.Grid style={gridStyle}>Away</Card.Grid>
+                            <Card.Grid style={gridStyle}>{brief.win}</Card.Grid>
+                            <Card.Grid style={gridStyle}>{brief.draw}</Card.Grid>
+                            <Card.Grid style={gridStyle}>{brief.lose}</Card.Grid>
+                        </Card>
+                        <Table dataSource={dataSource} columns={columns}/>
                     </div>
                 }
             >
-                <Meta
-                    title={`${home_team.country} vs. ${away_team.country}`}
-                    description={`${time.getHours()}:${time.getMinutes()}${(() => { if (time.getMinutes() < 10) { return "0" } })()}`}
-                />
             </Card>
         )
     }

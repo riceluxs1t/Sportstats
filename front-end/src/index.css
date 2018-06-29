@@ -8,13 +8,13 @@ html, body, #root {
   padding: 5px !important;
 }
 
-.ant-carousel .slick-dots li.slick-active button {
-  background-color: black;
-}
+/*.ant-carousel .slick-dots li.slick-active button {*/
+  /*background-color: black;*/
+/*}*/
 
-.ant-carousel .slick-dots li button{
-  background-color: black;
-}
+/*.ant-carousel .slick-dots li button{*/
+  /*background-color: black;*/
+/*}*/
 
 #main {
   display: flex;
@@ -22,4 +22,16 @@ html, body, #root {
 
 .slick-track {
   max-width: 100% !important;
+}
+
+.ant-carousel .slick-slide {
+  text-align: center;
+  height: 160px;
+  line-height: 160px;
+  background: #364d79;
+  overflow: hidden;
+}
+
+.ant-carousel .slick-slide h3 {
+  color: #fff;
 }

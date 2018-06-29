@@ -6,6 +6,7 @@ import {
   Carousel,
   message,
   Row,
+  Table,
   Col,
   Modal
 } from 'antd'
@@ -13,6 +14,18 @@ import Spin from './components/Spin'
 import Group from './components/Group'
 import Game from './components/Game'
 import LiveGame from './components/LiveGame'
+
+// import { Carousel } from 'antd';
+
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function onChange(a, b, c) {
+  console.log(a, b, c);
+}
+
 
 class App extends React.Component {
   constructor(props) {
@@ -55,6 +68,7 @@ class App extends React.Component {
       this.setState((prev, props) => Object.assign({}, prev, obj))
     } catch (e) {
       message.error(`${name} data error`)
+
       console.error(e)
     }
   }
@@ -118,6 +132,7 @@ class App extends React.Component {
   }
 
 
+
   render() {
     let now = {}
     if (this.state.now.length > 0) {
@@ -139,26 +154,27 @@ class App extends React.Component {
         >
           {this.state.modal.content}
         </Modal>
-        <div style={mainContent}>
-          <div id="header" style={{ textAlign: 'center', padding: 10 }}>
-            <h1 style={{ margin: 0 }}>World Cup 2018 Live</h1>
-          </div>
-          <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
-            {this.renderGames(1)}
-          </Row>
-          <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
-            {this.renderGames(0)}
-          </Row>
-          <div style={{width: 300}}>
-          </div>
-        </div>
+    <div style={mainContent}>
+            <div id="header" style={{ textAlign: 'center', padding: 10 }}>
+                <h1 style={{ margin: 0 }}>World Cup 2018 Live</h1>
+              </div>
+              <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
+                {this.renderGames(1)}
+              </Row>
+              <Row style={{ marginTop: "auto", marginBottom: "auto" }}>
+                {this.renderGames(0)}
+              </Row>
+
+              <div style={{width: 300}}>
+              </div>
+            </div>
       </div>
     );
   }
 }
 
 const mainContent = {
-  width: "calc(100% - 10px)",
+  width: "calc(100% - 200px)",
   height: "100vh",
   display: "grid"
 }
@@ -170,4 +186,9 @@ const groupTable = {
   gridGap: 20,
 }
 
+
+
+
 ReactDOM.render(<App />, document.getElementById('root'));
+
+
