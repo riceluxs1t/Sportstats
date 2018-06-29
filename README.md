@@ -48,5 +48,7 @@ https://ant.design/docs/react/introduce
 ## Run Nginx and Gunicorn
 
 gunicorn elosoccer.wsgi:application --bind=127.0.0.1:8001 &
+
 /etc/init.d/nginx restart # (ubuntu)
+
 /var/log/nginx
