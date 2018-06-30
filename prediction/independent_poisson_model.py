@@ -15,41 +15,10 @@ class IndependentPoissonModel(object):
     """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
 
-        home_team = home_team.lower()
-        away_team = away_team.lower()
+        l_A,l_B = self.getExpectation(home_team,away_team)
 
-        home_team_elo = get_current_elo(home_team)
-        away_team_elo = get_current_elo(away_team)
-
-        uA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
-            home_team,
-            True
-        ).predict([away_team_elo, 1])
-
-        uB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
-            away_team,
-            True
-        ).predict([home_team_elo, 1])
-
-        vA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
-            home_team,
-            False
-        ).predict([away_team_elo, 1])
-
-        vB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
-            away_team,
-            False
-        ).predict([home_team_elo, 1])
-
-        l_A = (uA_B + vB_A) / 2.0
-        l_B = (uB_A + vA_B) / 2.0
-        # print("l_A,l_B:",l_A,l_B)
         score_dict = self.run_simulations(l_A, l_B, self.NUM_ITERS)
-        # print("score_dict",score_dict)
+
         return score_dict
 
 
@@ -59,27 +28,29 @@ class IndependentPoissonModel(object):
 
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
+        home_team_matches = filter_matches(home_team)
+        away_team_matches = filter_matches(away_team)
 
         uA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
+            home_team_matches,
             home_team,
             True
         ).predict([away_team_elo, 1])
 
         uB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
+            away_team_matches,
             away_team,
             True
         ).predict([home_team_elo, 1])
 
         vA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
+            home_team_matches,
             home_team,
             False
         ).predict([away_team_elo, 1])
 
         vB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
+            away_team_matches,
             away_team,
             False
         ).predict([home_team_elo, 1])
@@ -89,26 +60,22 @@ class IndependentPoissonModel(object):
         return [l_A,l_B]
 
 
-    def sample(self, num_iters):
+    def sample_tournament(self, tournament):
         """ Sample 
         """
-        given_round16 = [
-            "uruguay","portugal",
-            "france","argentina",   
-            "brazil","mexico",
-            "belgium","japan",
-            "spain","russia",
-            "croatia","denmark",
-            "sweden","switzerland",
-            "colombia","england"]
-        E_dict = defaultdict(int)
+        num_iters = tournament.get_num_iters()
+        given_round16 = tournament.get_given_round16()
+        E_dict = defaultdict(float)
         for i in range(len(given_round16)):
             for j in range(i+1,len(given_round16)):
                 team1 = min(given_round16[i],given_round16[j])
                 team2 = max(given_round16[i],given_round16[j])
                 E_dict[(team1,team2)] = self.getExpectation(team1,team2)                
 
-        winner_dict = defaultdict(int)
+        winner_dict = defaultdict(float)
+        final_dict = defaultdict(float)
+        qf_dict = defaultdict(float)
+        round8_dict= defaultdict(float)
         
         for iteration in range(num_iters):
             # print("iteration:",iteration)
@@ -119,22 +86,29 @@ class IndependentPoissonModel(object):
                 #Guess winner for each game in round 16
                 home_team = given_round16[game_num*2]
                 away_team = given_round16[game_num*2+1]
-                predict_round8.append(self.getWinner(home_team,away_team,E_dict))
+                winner = self.getWinner(home_team,away_team,E_dict)
+                predict_round8.append(winner)
+                round8_dict[winner] += 1
             for game_num in range(4):
                 home_team = predict_round8[game_num*2]
                 away_team = predict_round8[game_num*2+1]
-                predict_qf.append(self.getWinner(home_team,away_team,E_dict))
+                winner = self.getWinner(home_team,away_team,E_dict)
+                predict_qf.append(winner)
+                qf_dict[winner] += 1
             for game_num in range(2):
                 home_team = predict_qf[game_num*2]
                 away_team = predict_qf[game_num*2+1]
-                predict_final.append(self.getWinner(home_team,away_team,E_dict))
-            home_team,away_team = predict_final
+                winner = self.getWinner(home_team,away_team,E_dict)
+                predict_final.append(winner)
+                final_dict[winner] +=1
+            home_team, away_team = predict_final
             winner_dict[self.getWinner(home_team,away_team,E_dict)] += 1
 
-        
-        for key in winner_dict:
-            winner_dict[key] /= num_iters                
-        return winner_dict
+        # print(sum(winner_dict.values())==num_iters)
+        # for key in winner_dict:
+        #     winner_dict[key] /= num_iters
+        # print(sum(winner_dict.values())==1)        
+        return winner_dict,final_dict,qf_dict,round8_dict
 
     def getWinner(self,home_team,away_team,E_dict):
         """Use Expectation of Poisson to get a winner of the game"""
