@@ -19,5 +19,6 @@ def predict(home_team, away_team):
 
 def predict_winner_worldcup():
     tournament = get_tournament()
+    # return tournament
     tournament_winner = tournament.get_winner_probability()
     return make_tournament_output(tournament_winner)

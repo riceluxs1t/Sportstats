@@ -1,6 +1,6 @@
 class TournamentOutput(object):
     """An abstract data that represents the Tournament output of some model."""
-    def get_outcome_prob(self, outcome):
+    def get_winner_prob(self, outcome):
         pass
 
     def get_nonzero_prob_outcomes_list(self):

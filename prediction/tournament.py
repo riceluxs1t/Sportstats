@@ -1,5 +1,5 @@
 from prediction import independent_poisson_model 
-from prediction.tournament_output import TournamentOutput
+from prediction.tournament_output import ConcreteTournamentOutput
 
 
 class Tournament(object):
@@ -28,10 +28,10 @@ class Tournament(object):
     def get_tournament_probability(self):
         model = independent_poisson_model.IndependentPoissonModel()
         self.predicted_winner,self.predicted_final,self.predicted_qf,self.predicted_round8 = model.sample_tournament(self) 
-        self.convert_to_probability_decimal(self.predicted_winner,1)
-        self.convert_to_probability_decimal(self.predicted_final,2)
-        self.convert_to_probability_decimal(self.predicted_qf,4)
-        self.convert_to_probability_decimal(self.predicted_round8,8)
+        self.convert_to_probability_decimal(self.predicted_winner)
+        self.convert_to_probability_decimal(self.predicted_final)
+        self.convert_to_probability_decimal(self.predicted_qf)
+        self.convert_to_probability_decimal(self.predicted_round8)
         return
         
     def get_winner_probability(self):
@@ -54,9 +54,9 @@ class Tournament(object):
             self.get_tournament_probability()
         return self.predicted_round8
 
-    def convert_to_probability_decimal(self,dic,num_team):
+    def convert_to_probability_decimal(self,dic):
         for key in dic:
-            dic[key] = round(dic[key]/(num_team*self.NUM_ITERS),4)
+            dic[key] = round(dic[key]/(self.NUM_ITERS),4)
         return
 
     def make_dic_tournament_ui(self):
@@ -70,14 +70,14 @@ class Tournament(object):
     def convert_to_probability_percentage(self,dic):
         result = {}
         for key in dic:
-            result[key[0].upper()+key[1:]] = str(round(dic[key]*100,2))+"%"
+            result[key[0].upper()+key[1:]] = str(round(dic[key]*100,1))+"%"
         return  result
         
 
 
 def make_prediction_output(tournament):
     """A constructor for a PredictionOutput of the Independent Poisson model. """
-    return TournamentOutput(tournament)
+    return ConcreteTournamentOutput(tournament)
 
 
 
