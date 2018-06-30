@@ -13,3 +13,8 @@ def predict(home_team, away_team):
     model = get_current_model()
     model_prediction_outcome = model.predict(home_team, away_team)
     return make_prediction_output_currnet_model(model_prediction_outcome)
+
+def sample(num_iters):
+    model = get_current_model()
+    model_sampling = model.sample(num_iters)
+    return model_sampling
