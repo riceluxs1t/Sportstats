@@ -21,6 +21,8 @@ http://eloratings.net/
 
 http://worldcup.sfg.io/
 
+https://github.com/estiens/world_cup_json
+
 ## Deployment
 
 http://ec2-13-125-192-62.ap-northeast-2.compute.amazonaws.com/
