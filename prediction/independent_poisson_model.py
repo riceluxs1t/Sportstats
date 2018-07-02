@@ -1,7 +1,6 @@
 from collections import defaultdict
 from functools import reduce
 from numpy.random import poisson as numpy_poisson_distribution
-from numpy.random import randint
 import statsmodels.api as sm
 from prediction.prediction_output import ConcretePredictionOutput
 from prediction.utils import get_current_elo, filter_matches
@@ -11,6 +10,7 @@ class IndependentPoissonModel(object):
 
     OPTIMIZATION_METHOD = 'newton'
     NUM_ITERS = 10000
+    COUNTRY_FIT_POISSON_CACHE = {}
 
     """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
@@ -23,125 +23,72 @@ class IndependentPoissonModel(object):
 
 
     def getExpectation(self,home_team,away_team):
+        """ Optimized number of DB access for fitting poisson model by
+        performing only once per team"""
         home_team = home_team.lower()
         away_team = away_team.lower()
 
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
-        home_team_matches = filter_matches(home_team)
-        away_team_matches = filter_matches(away_team)
+        
+        # Use Cached data if already caculated
+        if home_team not in self.COUNTRY_FIT_POISSON_CACHE:
+            home_team_matches = filter_matches(home_team)
+            home_fit_poisson_goal_scored = self.fit_poisson_using_goals(
+                home_team_matches,
+                home_team,
+                True
+            )
+            home_fit_poisson_goal_taken = self.fit_poisson_using_goals(
+                home_team_matches,
+                home_team,
+                False
+            )
 
-        uA_B = self.fit_poisson_using_goals(
-            home_team_matches,
-            home_team,
-            True
-        ).predict([away_team_elo, 1])
+            # Cache Data home_team
+            self.COUNTRY_FIT_POISSON_CACHE[home_team]={}
+            self.COUNTRY_FIT_POISSON_CACHE[home_team]["True"] = home_fit_poisson_goal_scored
+            self.COUNTRY_FIT_POISSON_CACHE[home_team]["False"] = home_fit_poisson_goal_taken
 
-        uB_A = self.fit_poisson_using_goals(
-            away_team_matches,
-            away_team,
-            True
-        ).predict([home_team_elo, 1])
+            uA_B = home_fit_poisson_goal_scored.predict([away_team_elo, 1])
+            vA_B = home_fit_poisson_goal_taken.predict([away_team_elo, 1])
+        else:
+            # Poisson Fit for this home_team is cached
+            uA_B = self.COUNTRY_FIT_POISSON_CACHE[home_team]["True"].predict([away_team_elo, 1])
+            vA_B = self.COUNTRY_FIT_POISSON_CACHE[home_team]["False"].predict([away_team_elo, 1])
+        
+        if away_team not in self.COUNTRY_FIT_POISSON_CACHE:
+            away_team_matches = filter_matches(away_team)
+            away_fit_poisson_goal_scored = self.fit_poisson_using_goals(
+                away_team_matches,
+                away_team,
+                True
+            )
+            away_fit_poisson_goal_taken = self.fit_poisson_using_goals(
+                away_team_matches,
+                away_team,
+                False
+            )
+            # Cache Data away_team
+            self.COUNTRY_FIT_POISSON_CACHE[away_team]={}
+            self.COUNTRY_FIT_POISSON_CACHE[away_team]["True"] = away_fit_poisson_goal_scored
+            self.COUNTRY_FIT_POISSON_CACHE[away_team]["False"] = away_fit_poisson_goal_taken
 
-        vA_B = self.fit_poisson_using_goals(
-            home_team_matches,
-            home_team,
-            False
-        ).predict([away_team_elo, 1])
-
-        vB_A = self.fit_poisson_using_goals(
-            away_team_matches,
-            away_team,
-            False
-        ).predict([home_team_elo, 1])
+            uB_A = away_fit_poisson_goal_scored.predict([home_team_elo, 1])
+            vB_A = away_fit_poisson_goal_taken.predict([home_team_elo, 1])
+        else:
+            # Poisson Fit for this away_team is cached
+            uB_A = self.COUNTRY_FIT_POISSON_CACHE[away_team]["True"].predict([home_team_elo, 1])
+            vB_A = self.COUNTRY_FIT_POISSON_CACHE[away_team]["False"].predict([home_team_elo, 1])
 
         l_A = (uA_B + vB_A) / 2.0
         l_B = (uB_A + vA_B) / 2.0
-        return [l_A,l_B]
-
-
-    def sample_tournament(self, tournament):
-        """ Sample 
-        """
-        num_iters = tournament.get_num_iters()
-        given_round16 = tournament.get_given_round16()
-        E_dict = defaultdict(float)
-        for i in range(len(given_round16)):
-            for j in range(i+1,len(given_round16)):
-                team1 = min(given_round16[i],given_round16[j])
-                team2 = max(given_round16[i],given_round16[j])
-                E_dict[(team1,team2)] = self.getExpectation(team1,team2)                
-
-        winner_dict = defaultdict(float)
-        final_dict = defaultdict(float)
-        qf_dict = defaultdict(float)
-        round8_dict= defaultdict(float)
-        
-        for iteration in range(num_iters):
-            # print("iteration:",iteration)
-            predict_final = []
-            predict_qf = []
-            predict_round8 = []
-            for game_num in range(8):
-                #Guess winner for each game in round 16
-                home_team = given_round16[game_num*2]
-                away_team = given_round16[game_num*2+1]
-                winner = self.getWinner(home_team,away_team,E_dict)
-                predict_round8.append(winner)
-                round8_dict[winner] += 1
-            for game_num in range(4):
-                home_team = predict_round8[game_num*2]
-                away_team = predict_round8[game_num*2+1]
-                winner = self.getWinner(home_team,away_team,E_dict)
-                predict_qf.append(winner)
-                qf_dict[winner] += 1
-            for game_num in range(2):
-                home_team = predict_qf[game_num*2]
-                away_team = predict_qf[game_num*2+1]
-                winner = self.getWinner(home_team,away_team,E_dict)
-                predict_final.append(winner)
-                final_dict[winner] +=1
-            home_team, away_team = predict_final
-            winner_dict[self.getWinner(home_team,away_team,E_dict)] += 1
-
-        # print(sum(winner_dict.values())==num_iters)
-        # for key in winner_dict:
-        #     winner_dict[key] /= num_iters
-        # print(sum(winner_dict.values())==1)        
-        return winner_dict,final_dict,qf_dict,round8_dict
-
-    def getWinner(self,home_team,away_team,E_dict):
-        """Use Expectation of Poisson to get a winner of the game"""
-        team1 = min(home_team,away_team)
-        team2 = max(home_team,away_team)
-        l_A,l_B = E_dict[(team1,team2)]
-        home_team_score = numpy_poisson_distribution(l_A,1)
-        away_team_score = numpy_poisson_distribution(l_B,1)
-        if home_team_score > away_team_score:
-            return home_team
-        elif home_team_score < away_team_score:
-            return away_team
-        else:
-            #Guess score for overtime game(30 min)
-            # TODO : Add factor for Player being tired
-            home_team_score += numpy_poisson_distribution(l_A/3,1)
-            away_team_score += numpy_poisson_distribution(l_B/3,1)
-            if home_team_score > away_team_score:
-                return home_team
-            elif home_team_score < away_team_score:
-                return away_team
-            else:
-                #penalty shootout : coin flip
-                if randint(2):
-                    return home_team
-                else:
-                    return away_team
-    
-
+        return [l_A,l_B]    
 
     def fit_poisson_using_goals(self, matches, team_name, scored):
         """fits and returns a poisson distribution using goals scored or
         allowed depending on 'scored' param. Uses the statsmodel library."""
+
         elos = []
         num_goals = []
 

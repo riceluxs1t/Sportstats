@@ -11,10 +11,10 @@ class ConcreteTournamentOutput(TournamentOutput):
     def __init__(self, tournament):
         self.tournament = tournament
     
-    def get_winner_prob(self,outcome):
-        outcome = outcome.lower()
-        if outcome in self.tournament:
-            return self.tournament[outcome]
+    def get_winner_prob(self,winner):
+        winner = winner.lower()
+        if winner in self.tournament:
+            return self.tournament[winner]
         else:
             return 0
 
