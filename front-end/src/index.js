@@ -1,24 +1,30 @@
 import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
+
 import { 
   Card,
   Carousel,
   message,
   Row,
+  Tabs,
   Table,
   Col,
   Avatar,
   Icon,
   Modal
 } from 'antd'
-import Spin from './components/Spin'
+
+import About from './components/About'
 import Group from './components/Group'
 import Game from './components/Game'
+import Tournament from './components/Tournament'
+
 import LiveGame from './components/LiveGame'
 
 // import { Carousel } from 'antd';
 
+const TabPane = Tabs.TabPane;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -26,6 +32,11 @@ function sleep(ms) {
 
 function onChange(a, b, c) {
   console.log(a, b, c);
+}
+
+
+function tabsCallBack(key) {
+  console.log(key);
 }
 
 
@@ -156,20 +167,34 @@ class App extends React.Component {
         >
           {this.state.modal.content}
         </Modal>
-    <div style={mainContent}>
+            <div style={mainContent}>
             <div id="header" style={{ textAlign: 'center', padding: 10 }}>
                 <h1 style={{ margin: 0 }}>World Cup 2018 Live</h1>
               </div>
-              <Row gutter={16}>
-              <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
-                {this.renderGames(1)}
-              </Col>
-              <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
-                {this.renderGames(0)}
-              </Col>
-              </Row>
-              <div style={{width: 300}}>
-              </div>
+
+            <Tabs defaultActiveKey="1" onChange={tabsCallBack}  style={{ height: "100%" }}>
+              <TabPane tab="Prediction" key="1">
+
+                <Row gutter={16}>
+                  <Icon type="github" spin={true} style={{ fontSize: 30, color: '#08c', width: "100%" }} />
+                </Row>
+                <Row gutter={16}>
+                <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
+                  {this.renderGames(1)}
+                </Col>
+                <Col style={{ marginTop: "auto", marginBottom: "auto" }}>
+                  {this.renderGames(0)}
+                </Col>
+                </Row>
+                <Row gutter={16}>
+                    <Tournament />
+                </Row>
+
+              </TabPane>
+              <TabPane tab="About" key="2">
+              </TabPane>
+            </Tabs>
+
             </div>
       </div>
     );
