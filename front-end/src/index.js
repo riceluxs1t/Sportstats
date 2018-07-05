@@ -192,6 +192,7 @@ class App extends React.Component {
 
               </TabPane>
               <TabPane tab="About" key="2">
+                <About />
               </TabPane>
             </Tabs>
 

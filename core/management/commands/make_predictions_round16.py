@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 import json
+import itertools
 from prediction import controller, utils
 
 
@@ -56,30 +57,20 @@ class Command(BaseCommand):
         # just for the round of 16
         teams = [
             'Uruguay',
-            'Portugal',
             'France',
-            'Argentina',
             'Brazil',
-            'Mexico',
             'Belgium',
-            'Japan',
-            'Spain',
             'Russia',
             'Croatia',
-            'Denmark',
             'Sweden',
-            'Switzerland',
-            'Colombia',
             'England'
         ]
 
         final_json_brief = {}
         final_json_outcomes = {}
 
-        for i in range(0, len(teams), 2):
-            home_team = teams[i]
-            away_team = teams[i+1]
-
+        # for i in range(0, len(teams), 2):
+        for home_team, away_team in itertools.permutations(teams, 2):
             dict_key = '{0}-{1}'.format(home_team, away_team)
 
             brief, outcomes = self.process_match(controller.predict(home_team, away_team))

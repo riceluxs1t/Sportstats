@@ -91,13 +91,12 @@ export default class Game extends React.Component {
     }
 
     render() {
-        const { home_team, away_team, datetime, status } = this.props.match
-        const time = new Date(datetime)
+        const { home_team, away_team, datetime, status } = this.props.match;
+        const time = new Date(datetime);
 
-        const prediction_key = home_team.country.concat('-').concat(away_team.country)
-        const dataSource = prediction_outcomes[prediction_key]
-        const brief = prediction_brief[prediction_key]
-
+        const prediction_key = home_team.country.concat('-').concat(away_team.country);
+        const dataSource = prediction_outcomes[prediction_key];
+        const brief = prediction_brief[prediction_key];
         return (
             <Card
                 hoverable
