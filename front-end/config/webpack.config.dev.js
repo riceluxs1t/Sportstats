@@ -85,7 +85,7 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/290
     // `web` extension prefixes have been added for better support
     // for React Native Web.
-    extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
+    extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx', 'less'],
     alias: {
       
       // Support React Native Web
@@ -160,7 +160,7 @@ module.exports = {
           // In production, we use a plugin to extract that CSS to a file, but
           // in development "style" loader enables hot editing of CSS.
           {
-            test: /\.css$/,
+            test: /\.(css|less)$/,
             use: [
               require.resolve('style-loader'),
               {
@@ -189,6 +189,12 @@ module.exports = {
                   ],
                 },
               },
+              {
+                loader: require.resolve('less-loader'),
+                options: {
+                  strictMatch: true,
+                },
+              }
             ],
           },
           // "file" loader makes sure those assets get served by WebpackDevServer.

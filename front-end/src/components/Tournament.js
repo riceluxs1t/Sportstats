@@ -33,6 +33,6 @@ const columns = [{
 
 export default function Tournament() {
     return(
-        <Table dataSource={dataSource} columns={columns}/>
+        <Table dataSource={dataSource} columns={columns} defaultExpandAllRows={ true } />
     )
 }
