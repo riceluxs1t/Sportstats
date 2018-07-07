@@ -12,7 +12,7 @@ class Command(BaseCommand):
         years = options['year']
 
         for year in years:
-            manual_scraper = scraper.ManualScraperAdapter(year)
+            manual_scraper = scraper.ScraperAdapter(year)
             matches = manual_scraper.get_match_data()
             loader.load_raw_match_data(matches)
             print('Processed {0} matches for year {1}'.format(
