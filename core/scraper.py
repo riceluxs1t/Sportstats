@@ -2,10 +2,10 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
-class ManualScraper(object):
-    """
-    Given a path to the HTML page of eloratings.net/XXXX_result,
-    parses and returns a Pandas DataFrame of match data. """
+class EloRatingsDataScraper(object):
+    """Given a particular year,
+    parses and returns a Pandas DataFrame of all raw data on
+    Eloratings.net/{year}_result page. """
     FIELDS = [
         "home_team",
         "away_team",
@@ -55,25 +55,24 @@ class ManualScraper(object):
     def __init__(self):
         self.num_fields = len(self.FIELDS)
 
-    def get_raw_matches(self, file_path):
+    def get_raw_matches(self, year):
         """
         The function that provides the main service.
-        :param file_path: the path to an eloratings.net results page.
+        :param year: the particular year of which to get the ELO ratings data.
         :return: a list of match data.
         """
-        html_page = self.get_html_page(file_path)
+        html_page = self.get_html_page(year)
         html_tree = self.get_html_tree(html_page)
         all_match_divs = self.get_all_match_divs(html_tree)
         matches = self.process_match_divs(all_match_divs)
         return pd.DataFrame(matches, columns=self.FIELDS)
 
-    def get_html_page(self, file_path):
+    def get_html_page(self, year):
+        """Gets the html page of all the ELO ratings data of the given year.
+        This method is meant to be an abstract method that must be implemented
+        in each subclass.
         """
-        Reads in a file at the specified path
-        and returns its string representation.
-        """
-        with open(file_path, 'r') as file:
-            return file.read()
+        raise NotImplemented("This method must be implemented!")
 
     def get_html_tree(self, page):
         """
@@ -201,17 +200,36 @@ class ManualScraper(object):
         return result
 
 
-class ManualScraperAdapter(object):
-    """An adapter so that the model side does not have to know
-    the particular scraper specific details. """
+class ManualEloRatingsDataScraper(EloRatingsDataScraper):
+    """Given a path to the HTML page of eloratings.net/XXXX_result,
+    parses and returns a Pandas DataFrame of match data. """
     FILE_PATH_SUFFIX = "./data/{0}_result.htm"
 
+    def get_html_page(self, year):
+        """
+        Reads in a file at the specified path
+        and returns its string representation.
+        """
+        file_path = self.FILE_PATH_SUFFIX.format(year)
+        with open(file_path, 'r') as file:
+            return file.read()
+
+
+class SeleniumEloRatingsDataScraper(EloRatingsDataScraper):
+    """Using Selenium, gets the HTML page of eloratings.net/{year}_result page,
+    parses and returns a Pandas DataFrame of match data. """
+
+    def get_html_page(self, year):
+        # TODO(youngmo): implement me!
+        raise NotImplemented("This must be implemented!")
+
+
+class ScraperAdapter(object):
+    """An adapter so that the model side does not have to know
+    the particular scraper specific details. """
     def __init__(self, year):
-        self.scraper = ManualScraper()
+        self.scraper = ManualEloRatingsDataScraper()
         self.year = year
 
     def get_match_data(self):
-
-        file_path = self.FILE_PATH_SUFFIX.format(self.year)
-
-        return self.scraper.get_raw_matches(file_path)
+        return self.scraper.get_raw_matches(self.year)
