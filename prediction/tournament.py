@@ -5,10 +5,12 @@ from numpy.random import randint
 from numpy.random import poisson as numpy_poisson_distribution
 
 
+class TournamentPredictionModel(object):
 
-class Tournament(object):
+    def __init__(self,
+        independent_poisson_model,
 
-    def __init__(self, independent_poisson_model):
+    ):
         self.independent_poisson_model = independent_poisson_model
         self.NUM_ITERS = 10000
         self.default_given_round16 = [
@@ -158,16 +160,9 @@ class Tournament(object):
         result = {}
         for key in dic:
             result[key[0].upper()+key[1:]] = str(round(dic[key]*100,1))+"%"
-        return  result
+        return result
         
-
 
 def make_tournament_prediction_output(tournament):
     """A constructor for a PredictionOutput of the tournament. """
     return ConcreteTournamentOutput(tournament)
-
-
-
-"""
-Use  
-"""
