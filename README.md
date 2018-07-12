@@ -21,6 +21,8 @@ http://eloratings.net/
 
 http://worldcup.sfg.io/
 
+https://github.com/estiens/world_cup_json
+
 ## Deployment
 
 http://ec2-13-125-192-62.ap-northeast-2.compute.amazonaws.com/
@@ -43,12 +45,13 @@ Highly recommend you get a Chrome JSON Formatter for human friendly rendering (h
 
 ## React Front with Ant-Design
 http://v1k45.com/blog/modern-django-part-1-setting-up-django-and-react/
+
 https://ant.design/docs/react/introduce
+
+Prototype ui borrowed from https://github.com/pedsm/liveCup
 
 ## Run Nginx and Gunicorn
 
 gunicorn elosoccer.wsgi:application --bind=127.0.0.1:8001 &
-
 /etc/init.d/nginx restart # (ubuntu)
-
 /var/log/nginx

@@ -94,7 +94,7 @@ DATABASES = {
 WEBPACK_LOADER = {
     'DEFAULT': {
             'BUNDLE_DIR_NAME': 'bundles/',
-            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.dev.json'),
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.prod.json'),
         }
 }
 
@@ -140,7 +140,7 @@ STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = [
-    os.path.join(PROJECT_ROOT, 'static'),
+    os.path.join(BASE_DIR, "assets"),
 ]
 
 # Simplified static file serving.

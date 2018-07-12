@@ -130,6 +130,25 @@ module.exports = {
         include: paths.appSrc,
       },
       {
+        test: /\.less$/,
+        use: [
+          {
+            loader: "style-loader"
+          },
+          {
+            loader: "css-loader",
+            options: {
+              sourceMap: true,
+              modules: true,
+              localIdentName: "[local]___[hash:base64:5]"
+            }
+          },
+          {
+            loader: "less-loader"
+          }
+        ]
+      },
+      {
         // "oneOf" will traverse all following loaders until one will
         // match the requirements. When no loader matches it will fall
         // back to the "file" loader at the end of the loader list.
