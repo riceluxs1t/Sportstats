@@ -13,5 +13,5 @@ class Command(BaseCommand):
         home_team = options['teams'][0]
         away_team = options['teams'][1]
 
-        current_model = controller.get_current_model()
+        current_model = controller.get_current_single_match_model()
         current_model.predict(home_team, away_team)

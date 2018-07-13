@@ -7,83 +7,92 @@ from prediction.utils import get_current_elo, filter_matches
 
 
 class IndependentPoissonModel(object):
-
+    """Models goals to be scored as two independent Poisson R.Vs. """
     OPTIMIZATION_METHOD = 'newton'
     NUM_ITERS = 10000
-    COUNTRY_FIT_POISSON_CACHE = {}
+    CACHE_FITTED_POISSON_MODELS = {}
 
-    """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
+        """Given a pair of teams, returns a dictionary of each possible scenarios as keys
+        and their likelihoods as values. """
+        home_team_poisson_param, away_team_poisson_param = (
+            self.estimate_poisson_param(home_team, away_team)
+        )
 
-        l_A,l_B = self.getExpectation(home_team,away_team)
-
-        score_dict = self.run_simulations(l_A, l_B, self.NUM_ITERS)
+        score_dict = self.run_simulations(
+            home_team_poisson_param,
+            away_team_poisson_param,
+            self.NUM_ITERS
+        )
 
         return score_dict
 
+    def estimate_poisson_param(self, home_team, away_team):
+        """For a given pair of teams, estimate their poisson parameters as
+        explained in the reference paper. Basically, code first estimates
+        the four separate independent poisson parameters that measure
+        the two teams' offensive and defensive strengths and use them to output the
+        actual poisson parameters. """
+        def compute_or_lookup_offensive_defensive_poisson_models(team_name):
+            """Computes the fitted poisson distributions that represent the given
+            team's offensive and defensive strengths or looks up their cached values. """
+            cached_models = self.CACHE_FITTED_POISSON_MODELS.get(team_name)
+            if cached_models is None:
+                matches = filter_matches(team_name)
+                poisson_goals_scored = self.fit_poisson_using_goals(
+                    matches,
+                    team_name,
+                    True
+                )
 
-    def getExpectation(self,home_team,away_team):
-        """ Optimized number of DB access for fitting poisson model by
-        performing only once per team"""
+                poisson_goals_taken = self.fit_poisson_using_goals(
+                    matches,
+                    team_name,
+                    False
+                )
+
+                self.CACHE_FITTED_POISSON_MODELS[team_name] = (
+                    poisson_goals_scored,
+                    poisson_goals_taken
+                )
+
+                cached_models = (
+                    poisson_goals_scored,
+                    poisson_goals_taken
+                )
+            return cached_models
+
         home_team = home_team.lower()
         away_team = away_team.lower()
 
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
-        
-        # Use Cached data if already caculated
-        if home_team not in self.COUNTRY_FIT_POISSON_CACHE:
-            home_team_matches = filter_matches(home_team)
-            home_fit_poisson_goal_scored = self.fit_poisson_using_goals(
-                home_team_matches,
-                home_team,
-                True
-            )
-            home_fit_poisson_goal_taken = self.fit_poisson_using_goals(
-                home_team_matches,
-                home_team,
-                False
-            )
 
-            # Cache Data home_team
-            self.COUNTRY_FIT_POISSON_CACHE[home_team]={}
-            self.COUNTRY_FIT_POISSON_CACHE[home_team]["True"] = home_fit_poisson_goal_scored
-            self.COUNTRY_FIT_POISSON_CACHE[home_team]["False"] = home_fit_poisson_goal_taken
+        home_poisson_goals_scored, home_poisson_goals_taken = (
+            compute_or_lookup_offensive_defensive_poisson_models(home_team)
+        )
 
-            uA_B = home_fit_poisson_goal_scored.predict([away_team_elo, 1])
-            vA_B = home_fit_poisson_goal_taken.predict([away_team_elo, 1])
-        else:
-            # Poisson Fit for this home_team is cached
-            uA_B = self.COUNTRY_FIT_POISSON_CACHE[home_team]["True"].predict([away_team_elo, 1])
-            vA_B = self.COUNTRY_FIT_POISSON_CACHE[home_team]["False"].predict([away_team_elo, 1])
-        
-        if away_team not in self.COUNTRY_FIT_POISSON_CACHE:
-            away_team_matches = filter_matches(away_team)
-            away_fit_poisson_goal_scored = self.fit_poisson_using_goals(
-                away_team_matches,
-                away_team,
-                True
-            )
-            away_fit_poisson_goal_taken = self.fit_poisson_using_goals(
-                away_team_matches,
-                away_team,
-                False
-            )
-            # Cache Data away_team
-            self.COUNTRY_FIT_POISSON_CACHE[away_team]={}
-            self.COUNTRY_FIT_POISSON_CACHE[away_team]["True"] = away_fit_poisson_goal_scored
-            self.COUNTRY_FIT_POISSON_CACHE[away_team]["False"] = away_fit_poisson_goal_taken
+        away_poisson_goals_scored, away_poisson_goals_taken = (
+            compute_or_lookup_offensive_defensive_poisson_models(away_team)
+        )
 
-            uB_A = away_fit_poisson_goal_scored.predict([home_team_elo, 1])
-            vB_A = away_fit_poisson_goal_taken.predict([home_team_elo, 1])
-        else:
-            # Poisson Fit for this away_team is cached
-            uB_A = self.COUNTRY_FIT_POISSON_CACHE[away_team]["True"].predict([home_team_elo, 1])
-            vB_A = self.COUNTRY_FIT_POISSON_CACHE[away_team]["False"].predict([home_team_elo, 1])
+        # compute home_team and away team's offensive and defensive strengths.
+        home_team_offensive_strength = home_poisson_goals_scored.predict([away_team_elo, 1])
+        home_team_defensive_strength = home_poisson_goals_taken.predict([away_team_elo, 1])
 
-        l_A = (uA_B + vB_A) / 2.0
-        l_B = (uB_A + vA_B) / 2.0
-        return [l_A,l_B]    
+        away_team_offensive_strength = away_poisson_goals_scored.predict([home_team_elo, 1])
+        away_team_defensive_strength = away_poisson_goals_taken.predict([home_team_elo, 1])
+
+        # compute the final poisson parameters.
+        home_team_poisson_param = (
+          home_team_offensive_strength + away_team_defensive_strength
+        ) / 2.0
+
+        away_team_poisson_param = (
+            home_team_defensive_strength + away_team_offensive_strength
+        ) / 2.0
+
+        return home_team_poisson_param, away_team_poisson_param
 
     def fit_poisson_using_goals(self, matches, team_name, scored):
         """fits and returns a poisson distribution using goals scored or
@@ -137,8 +146,7 @@ class IndependentPoissonModel(object):
 
         home_team_score_simulations = numpy_poisson_distribution(poisson_param_home_team, num_iters)
         away_team_score_simulations = numpy_poisson_distribution(poisson_param_away_team, num_iters)
-        # print("home_team_score_simulation :",home_team_score_simulations)
-        # print("away_team_score_simulations:",away_team_score_simulations)
+
         score_dict = reduce(
             reduce_func,
             zip(home_team_score_simulations, away_team_score_simulations),
@@ -154,71 +162,3 @@ class IndependentPoissonModel(object):
 def make_prediction_output(model_outcome):
     """A constructor for a PredictionOutput of the Independent Poisson model. """
     return ConcretePredictionOutput(model_outcome)
-
-"""
-Sample result :
-iteration 10:
-1)
-    {'spain': 0.5, 
-    'brazil': 0.4, 
-    'denmark': 0.1}
-2)
-    {'colombia': 0.1,
-    'belgium': 0.1,
-    'switzerland': 0.1,
-    'france': 0.3,
-    'portugal': 0.1,
-    'spain': 0.3})
-    
-iteration 100:
-    {'brazil': 0.23,
-    'belgium': 0.16,
-    'argentina': 0.12,
-    'spain': 0.14,
-    'denmark': 0.01,
-    'croatia': 0.04,
-    'uruguay': 0.03,
-    'portugal': 0.08,
-    'colombia': 0.04,
-    'sweden': 0.02,
-    'switzerland': 0.04,
-    'mexico': 0.04,
-    'france': 0.04,
-    'england': 0.01})
-iteration 1000:
-defaultdict(int,
-            {'argentina': 0.112,
-             'portugal': 0.074,
-             'brazil': 0.217,
-             'switzerland': 0.049,
-             'croatia': 0.037,
-             'russia': 0.013,
-             'spain': 0.183,
-             'belgium': 0.066,
-             'colombia': 0.091,
-             'uruguay': 0.025,
-             'denmark': 0.025,
-             'france': 0.036,
-             'mexico': 0.026,
-             'sweden': 0.027,
-             'england': 0.018,
-             'japan': 0.001})
-iteration 10000
-            {'switzerland': 0.0693,
-             'brazil': 0.076,
-             'uruguay': 0.1076,
-             'croatia': 0.0557,
-             'russia': 0.0966,
-             'colombia': 0.0439,
-             'sweden': 0.0573,
-             'argentina': 0.0559,
-             'france': 0.0815,
-             'belgium': 0.1315,
-             'spain': 0.0201,
-             'mexico': 0.0313,
-             'denmark': 0.0527,
-             'portugal': 0.0545,
-             'england': 0.0496,
-             'japan': 0.0165})
-
-"""

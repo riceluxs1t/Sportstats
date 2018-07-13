@@ -38,3 +38,4 @@ class Tournament(object):
             return True
         else:
             return False
+
