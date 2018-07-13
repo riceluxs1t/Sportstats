@@ -7,12 +7,60 @@ from prediction.utils import get_current_elo, filter_matches
 
 
 class IndependentPoissonModel(object):
-
+    """Models goals to be scored as two independent Poisson R.Vs. """
     OPTIMIZATION_METHOD = 'newton'
     NUM_ITERS = 10000
+    CACHE_FITTED_POISSON_MODELS = {}
 
-    """Models goals to be scored as two independent Poisson R.Vs. """
     def predict(self, home_team, away_team):
+        """Given a pair of teams, returns a dictionary of each possible scenarios as keys
+        and their likelihoods as values. """
+        home_team_poisson_param, away_team_poisson_param = (
+            self.estimate_poisson_param(home_team, away_team)
+        )
+
+        score_dict = self.run_simulations(
+            home_team_poisson_param,
+            away_team_poisson_param,
+            self.NUM_ITERS
+        )
+
+        return score_dict
+
+    def estimate_poisson_param(self, home_team, away_team):
+        """For a given pair of teams, estimate their poisson parameters as
+        explained in the reference paper. Basically, code first estimates
+        the four separate independent poisson parameters that measure
+        the two teams' offensive and defensive strengths and use them to output the
+        actual poisson parameters. """
+        def compute_or_lookup_offensive_defensive_poisson_models(team_name):
+            """Computes the fitted poisson distributions that represent the given
+            team's offensive and defensive strengths or looks up their cached values. """
+            cached_models = self.CACHE_FITTED_POISSON_MODELS.get(team_name)
+            if cached_models is None:
+                matches = filter_matches(team_name)
+                poisson_goals_scored = self.fit_poisson_using_goals(
+                    matches,
+                    team_name,
+                    True
+                )
+
+                poisson_goals_taken = self.fit_poisson_using_goals(
+                    matches,
+                    team_name,
+                    False
+                )
+
+                self.CACHE_FITTED_POISSON_MODELS[team_name] = (
+                    poisson_goals_scored,
+                    poisson_goals_taken
+                )
+
+                cached_models = (
+                    poisson_goals_scored,
+                    poisson_goals_taken
+                )
+            return cached_models
 
         home_team = home_team.lower()
         away_team = away_team.lower()
@@ -20,40 +68,36 @@ class IndependentPoissonModel(object):
         home_team_elo = get_current_elo(home_team)
         away_team_elo = get_current_elo(away_team)
 
-        uA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
-            home_team,
-            True
-        ).predict([away_team_elo, 1])
+        home_poisson_goals_scored, home_poisson_goals_taken = (
+            compute_or_lookup_offensive_defensive_poisson_models(home_team)
+        )
 
-        uB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
-            away_team,
-            True
-        ).predict([home_team_elo, 1])
+        away_poisson_goals_scored, away_poisson_goals_taken = (
+            compute_or_lookup_offensive_defensive_poisson_models(away_team)
+        )
 
-        vA_B = self.fit_poisson_using_goals(
-            filter_matches(home_team),
-            home_team,
-            False
-        ).predict([away_team_elo, 1])
+        # compute home_team and away team's offensive and defensive strengths.
+        home_team_offensive_strength = home_poisson_goals_scored.predict([away_team_elo, 1])
+        home_team_defensive_strength = home_poisson_goals_taken.predict([away_team_elo, 1])
 
-        vB_A = self.fit_poisson_using_goals(
-            filter_matches(away_team),
-            away_team,
-            False
-        ).predict([home_team_elo, 1])
+        away_team_offensive_strength = away_poisson_goals_scored.predict([home_team_elo, 1])
+        away_team_defensive_strength = away_poisson_goals_taken.predict([home_team_elo, 1])
 
-        l_A = (uA_B + vB_A) / 2.0
-        l_B = (uB_A + vA_B) / 2.0
+        # compute the final poisson parameters.
+        home_team_poisson_param = (
+          home_team_offensive_strength + away_team_defensive_strength
+        ) / 2.0
 
-        score_dict = self.run_simulations(l_A, l_B, self.NUM_ITERS)
+        away_team_poisson_param = (
+            home_team_defensive_strength + away_team_offensive_strength
+        ) / 2.0
 
-        return score_dict
+        return home_team_poisson_param, away_team_poisson_param
 
     def fit_poisson_using_goals(self, matches, team_name, scored):
         """fits and returns a poisson distribution using goals scored or
         allowed depending on 'scored' param. Uses the statsmodel library."""
+
         elos = []
         num_goals = []
 
@@ -94,6 +138,7 @@ class IndependentPoissonModel(object):
         poisson_param_away_team,
         num_iters
     ):
+
         def reduce_func(current_dict, pair):
             home_team_score, away_team_score = pair
             current_dict[(home_team_score, away_team_score)] += 1
